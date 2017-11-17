@@ -180,6 +180,12 @@ footer>.layout{
 footer .box{
     position: relative;
     overflow: hidden;
+    height: 24vh;
+}
+
+footer ul{
+    position: absolute;
+    left: 0;
 }
 
 footer ul:after{
@@ -206,6 +212,10 @@ footer li .cover{
     height: 16vh;
     background-size:cover;
     background-position: center center;
+}
+
+footer li.active{
+    box-shadow: 0 0 0.5vh 0.5vh;
 }
 
 footer h3{
