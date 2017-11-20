@@ -149,7 +149,7 @@ main .area-bar .current-time {
 main .area-bar .bar-progress {
     position: absolute;
     height: .8vh;
-    width: 10%;
+    width: 0;
     background-color: #fff;
     border-radius: .2vh;
     transition: width 0.8s;

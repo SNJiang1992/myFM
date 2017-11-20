@@ -110,6 +110,7 @@ let Fm = {
         this.$container = $('#page-music')
         this.audio = new Audio()
         this.audio.autoplay = true
+        this.loadMusic()
         this.bind()
     },
     bind() {
@@ -139,6 +140,10 @@ let Fm = {
             _this.loadMusic()
         })
 
+        this.$container.find('.btn-collect').on('click', function () {
+            _this.loadMusic()
+        })
+
         this.audio.addEventListener('play', function () {
             clearInterval(_this.statusClock)
             _this.statusClock = setInterval(function () {
@@ -150,7 +155,7 @@ let Fm = {
             clearInterval(_this.statusClock)
         })
     },
-    loadMusic(callback) {
+    loadMusic() {
         let _this = this
         $.getJSON('//jirenguapi.applinzi.com/fm/getSong.php', {channel: this.channelId})
             .done(function (ret) {
