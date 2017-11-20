@@ -152,6 +152,7 @@ main .area-bar .bar-progress {
     width: 10%;
     background-color: #fff;
     border-radius: .2vh;
+    transition: width 0.8s;
 }
 
 main .author {

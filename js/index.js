@@ -16,6 +16,7 @@ let Footer = {
         this.$rightBtn = this.$footer.find('.icon-right')
         this.isToEnd = false
         this.isToStart = true
+        this.isAnimate = false
         this.bind()
         this.render()
     },
@@ -27,12 +28,15 @@ let Footer = {
         })
 
         this.$rightBtn.on('click', function () {
+            if (_this.isAnimate) return
             let itemWidth = _this.$box.find('li').outerWidth(true)
             let rowCount = Math.floor(_this.$box.width() / itemWidth)
             if (!_this.isToEnd) {
+                _this.isAnimate = true
                 _this.$ul.animate({
                     left: `-=${rowCount * itemWidth}`
                 }, 400, function () {
+                    _this.isAnimate = false
                     _this.isToStart = false
                     _this.$leftBtn.show()
                     if (parseFloat(_this.$box.width()) - parseFloat(_this.$ul.css('left')) >= parseFloat(_this.$ul.css('width'))) {
@@ -44,14 +48,15 @@ let Footer = {
         })
 
         this.$leftBtn.on('click', function () {
-
+            if (_this.isAnimate) return
             let itemWidth = _this.$box.find('li').outerWidth(true)
             let rowCount = Math.floor(_this.$box.width() / itemWidth)
             if (!_this.isToStart) {
-                console.log(11111)
+                _this.isAnimate = true
                 _this.$ul.animate({
                     left: `+=${rowCount * itemWidth}`
                 }, 400, function () {
+                    _this.isAnimate = false
                     _this.isToEnd = false
                     _this.$rightBtn.show()
                     if (parseInt(_this.$ul.css('left')) >= 0) {
@@ -62,10 +67,13 @@ let Footer = {
             }
         })
 
-        this.$footer.on('click','li',function () {
-            $(this).addClass('active').
-                siblings().removeClass('active')
-            EventCenter.fire('select-albumn',$(this).attr('data-channel-id'))
+        this.$footer.on('click', 'li', function () {
+            $(this).addClass('active').siblings().removeClass('active')
+            EventCenter.fire('select-albumn',
+                {
+                    channelId: $(this).attr('data-channel-id'),
+                    channelName: $(this).attr('data-channel-name')
+                })
         })
 
     },
@@ -79,10 +87,9 @@ let Footer = {
         })
     },
     renderFooter(channels) {
-        console.log(channels)
         let html = ''
         channels.forEach(function (channel) {
-            html += `<li data-channel-id="${channel.channel_id}">
+            html += `<li data-channel-id="${channel.channel_id}" data-channel-name="${channel.name}">
                     <div class="cover" style="background-image:url(${channel.cover_small})"></div>
                     <h3>${channel.name}</h3>
                     </li>`
@@ -98,10 +105,79 @@ let Footer = {
         })
     }
 }
+let Fm = {
+    init() {
+        this.$container = $('#page-music')
+        this.audio = new Audio()
+        this.audio.autoplay = true
+        this.bind()
+    },
+    bind() {
+        let _this = this
+        EventCenter.on('select-albumn', function (e, channelObj) {
+            _this.channelId = channelObj.channelId
+            _this.channelName = channelObj.channelName
+            _this.loadMusic(function () {
+                _this.setMusic()
+            })
+        })
+
+        this.$container.find('.btn-play').on('click', function () {
+            let $btn = $(this)
+            if ($btn.hasClass('icon-play')) {
+                $btn.removeClass('icon-play').addClass('icon-pause')
+                _this.audio.play()
+            } else {
+                $btn.removeClass('icon-pause').addClass('icon-play')
+                _this.audio.pause()
+            }
+        })
+
+        this.$container.find('.btn-next').on('click', function () {
+            _this.loadMusic(function () {
+                _this.setMusic()
+            })
+        })
+
+        this.audio.addEventListener('play', function () {
+            clearInterval(_this.statusClock)
+            _this.statusClock = setInterval(function () {
+                _this.updataStatus()
+            }, 1000)
+        })
+
+        this.audio.addEventListener('pause',function () {
+            clearInterval(_this.statusClock)
+        })
+    },
+    loadMusic(callback) {
+        let _this = this
+        console.log('loadmusic...')
+        $.getJSON('//jirenguapi.applinzi.com/fm/getSong.php', {channel: this.channelId})
+            .done(function (ret) {
+                console.log(ret['song'][0])
+                _this.song = ret['song'][0]
+                callback()
+            })
+    },
+    setMusic() {
+        console.log('set music...')
+        console.log(this.song)
+        this.audio.src = this.song.url
+        $('.bg').css('background-image', `url('${this.song.picture}')`)
+        this.$container.find('.aside figure').css('background-image', `url('${this.song.picture}')`)
+        this.$container.find('.detail h1').text(this.song.title)
+        this.$container.find('.detail .author').text(this.song.artist)
+        this.$container.find('.tag').text(this.channelName)
+    },
+    updataStatus() {
+        let min = Math.floor(this.audio.currentTime/60)
+        let second = Math.floor(this.audio.currentTime%60)+''
+        second = second.length ===2?second:`0${second}`
+        this.$container.find('.current-time').text(min+':'+second)
+        this.$container.find('.bar-progress').css('width',this.audio.currentTime/this.audio.duration*100+'%')
+    }
+}
 
 Footer.init()
-
-EventCenter.on('select-albumn',function (e,data) {
-    console.log(data)
-
-})
+Fm.init()
